@@ -12,7 +12,9 @@ export function KakaoMap({
     level = 10,
     className = '',
     markers = [],
+
     onMarkerClick,
+    onClick,
 }: KakaoMapProps) {
     const mapContainer = useRef<HTMLDivElement>(null)
     const mapRef = useRef<any>(null)
@@ -55,6 +57,14 @@ export function KakaoMap({
             // 줌 컨트롤 추가
             const zoomControl = new window.kakao.maps.ZoomControl()
             map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT)
+
+            // 지도 클릭 이벤트 (Handle map click)
+            if (onClick) {
+                window.kakao.maps.event.addListener(map, 'click', (mouseEvent: any) => {
+                    const latlng = mouseEvent.latLng
+                    onClick(latlng.getLat(), latlng.getLng())
+                })
+            }
         }
     }, [center.lat, center.lng, level, isLoaded])
 

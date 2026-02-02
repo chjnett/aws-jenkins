@@ -19,23 +19,26 @@ interface BuyDrawerProps {
 }
 
 export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
-  const [energy, setEnergy] = useState('')
+  const [duration, setDuration] = useState('')
+  const [speed, setSpeed] = useState(7)
   const [isOrdering, setIsOrdering] = useState(false)
   const [orderComplete, setOrderComplete] = useState(false)
 
   const pricePerKwh = 250
-  const calculatedPrice = energy ? Number.parseFloat(energy) * pricePerKwh : 0
+  const calculatedEnergy = duration ? (Number.parseFloat(duration) / 60) * speed : 0
+  const calculatedPrice = calculatedEnergy * pricePerKwh
 
   useEffect(() => {
     if (!open) {
-      setEnergy('')
+      setDuration('')
+      setSpeed(7)
       setIsOrdering(false)
       setOrderComplete(false)
     }
   }, [open])
 
   const handleOrder = () => {
-    if (!energy || Number.parseFloat(energy) <= 0) return
+    if (!duration || Number.parseFloat(duration) <= 0) return
     setIsOrdering(true)
 
     setTimeout(() => {
@@ -96,34 +99,65 @@ export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
                   </div>
                 </div>
 
-                {/* Energy Input */}
+
+                {/* Time Input */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    충전할 에너지 (kWh)
+                    충전 시간 (분)
                   </label>
                   <div className="relative">
                     <input
                       type="number"
-                      value={energy}
-                      onChange={(e) => setEnergy(e.target.value)}
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
                       placeholder="0"
                       className="w-full h-14 px-4 pr-16 text-2xl font-bold bg-secondary rounded-xl border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-muted-foreground"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
-                      kWh
+                      분
                     </span>
                   </div>
 
                   <div className="flex gap-2">
-                    {[5, 10, 20, 50].map((amount) => (
+                    {[10, 30, 60, 120].map((mins) => (
                       <button
-                        key={amount}
-                        onClick={() => setEnergy(String(amount))}
+                        key={mins}
+                        onClick={() => setDuration(String(mins))}
                         className="flex-1 py-2 rounded-lg bg-secondary hover:bg-secondary/80 text-sm font-medium text-foreground transition-colors border border-border"
                       >
-                        {amount}
+                        {mins}분
                       </button>
                     ))}
+                  </div>
+                </div>
+
+
+                {/* Charging Speed Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    충전 속도 (kW)
+                  </label>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[7, 50, 100, 200, 300].map((s) => {
+                      let label = ''
+                      if (s === 7) label = '완속'
+                      else if (s <= 100) label = '급속'
+                      else label = '초급속'
+
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => setSpeed(s)}
+                          className={`flex flex-col items-center justify-center py-2 rounded-lg border transition-all ${speed === s
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-secondary text-foreground border-border hover:bg-secondary/80'
+                            }`}
+                        >
+                          <span className="text-sm font-bold">{s}{s === 300 && '+'}</span>
+                          <span className="text-[10px] opacity-80">{label}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
 
@@ -134,8 +168,12 @@ export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
                     <span className="text-foreground">{pricePerKwh.toLocaleString()}원/kWh</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">수량</span>
-                    <span className="text-foreground">{energy || 0} kWh</span>
+                    <span className="text-muted-foreground">충전 시간</span>
+                    <span className="text-foreground">{duration || 0} 분</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">예상 에너지</span>
+                    <span className="text-foreground">{calculatedEnergy.toFixed(1)} kWh</span>
                   </div>
                   <div className="border-t border-border pt-2 mt-2" />
                   <div className="flex justify-between">
@@ -149,7 +187,7 @@ export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
                 {/* Order Button */}
                 <button
                   onClick={handleOrder}
-                  disabled={!energy || Number.parseFloat(energy) <= 0 || isOrdering}
+                  disabled={!duration || Number.parseFloat(duration) <= 0 || isOrdering}
                   className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isOrdering ? (
@@ -179,7 +217,7 @@ export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
                 </motion.div>
                 <h3 className="text-xl font-bold text-foreground">주문 완료!</h3>
                 <p className="text-muted-foreground text-sm">
-                  {energy} kWh 에너지 충전이 요청되었습니다.
+                  약 {calculatedEnergy.toFixed(1)} kWh ({duration}분) 에너지 충전이 요청되었습니다.
                   <br />
                   트럭이 곧 도착합니다.
                 </p>
@@ -205,6 +243,6 @@ export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
           </AnimatePresence>
         </div>
       </DrawerContent>
-    </Drawer>
+    </Drawer >
   )
 }

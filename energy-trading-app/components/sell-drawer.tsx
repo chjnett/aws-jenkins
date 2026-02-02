@@ -9,9 +9,28 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from '@/components/ui/drawer'
-import { Zap, Truck, Calculator, MapPin, CheckCircle2 } from 'lucide-react'
+import { Zap, Truck, Calculator, MapPin, CheckCircle2, Navigation, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import Image from 'next/image'
+
+type Region = 'JEJU_NORTH' | 'JEJU_SOUTH' | 'JEJU_EAST' | 'JEJU_WEST'
+
+const CENTER = { lat: 33.3617, lng: 126.5292 } // 한라산
+
+const SOLAR_COEFFICIENT: Record<Region, number> = {
+  JEJU_EAST: 10.592272727272727, // 성산 (동부) - 사용자 지정 값
+  JEJU_WEST: 11.2450, // 고산 (서부)
+  JEJU_SOUTH: 11.5500, // 서귀포 (남부)
+  JEJU_NORTH: 10.1200, // 제주시 (북부)
+}
+
+const REGION_NAMES: Record<Region, string> = {
+  JEJU_EAST: '제주 동부 (성산)',
+  JEJU_WEST: '제주 서부 (고산)',
+  JEJU_SOUTH: '제주 남부 (서귀포)',
+  JEJU_NORTH: '제주 북부 (제주시)',
+}
 
 interface SellDrawerProps {
   open: boolean
@@ -23,11 +42,14 @@ type Step = 'input' | 'result' | 'active'
 export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
   const [step, setStep] = useState<Step>('input')
   const [area, setArea] = useState('')
+  const [selectedRegion, setSelectedRegion] = useState<Region>('JEJU_EAST') // Default
+  const [selectedCoords, setSelectedCoords] = useState<{ x: number, y: number } | null>(null)
+  const [mapScale, setMapScale] = useState(1)
   const [isCalculating, setIsCalculating] = useState(false)
   const [isListingActive, setIsListingActive] = useState(false)
   const [calculatedEnergy, setCalculatedEnergy] = useState(0)
   const [calculatedProfit, setCalculatedProfit] = useState(0)
-  
+
   useEffect(() => {
     if (!open) {
       setStep('input')
@@ -36,27 +58,62 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
       setIsListingActive(false)
       setCalculatedEnergy(0)
       setCalculatedProfit(0)
+      setSelectedCoords(null)
+      setSelectedRegion('JEJU_EAST')
     }
   }, [open])
-  
+
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const width = rect.width
+    const height = rect.height
+
+    // Store relative coordinates (percentage)
+    const xPercent = (x / width) * 100
+    const yPercent = (y / height) * 100
+
+    setSelectedCoords({ x: xPercent, y: yPercent })
+
+    // Determine region based on click position relative to center (approx)
+    // Center of Jeju roughly at 50% width, 50% height
+    // Adjust these thresholds based on the map image shape
+    const centerX = 50
+    const centerY = 50
+
+    const xDiff = xPercent - centerX
+    const yDiff = yPercent - centerY
+
+    // Simple 4-quadrant logic
+    // If we want "East/West" dominance vs "North/South" dominance
+    if (Math.abs(xDiff) > Math.abs(yDiff)) {
+      // More Horizontal deviation -> East or West
+      setSelectedRegion(xDiff > 0 ? 'JEJU_EAST' : 'JEJU_WEST')
+    } else {
+      // More Vertical deviation -> North or South
+      setSelectedRegion(yDiff > 0 ? 'JEJU_SOUTH' : 'JEJU_NORTH')
+    }
+  }
+
   const handleCalculate = () => {
     if (!area || Number.parseFloat(area) <= 0) return
     setIsCalculating(true)
-    
+
     setTimeout(() => {
       const areaNum = Number.parseFloat(area)
       const dailyEnergy = (areaNum * 0.15 * 5)
       const monthlyEnergy = dailyEnergy * 30
       const surplusEnergy = monthlyEnergy * 0.7
       const profit = surplusEnergy * 250
-      
+
       setCalculatedEnergy(Math.round(surplusEnergy * 10) / 10)
       setCalculatedProfit(Math.round(profit))
       setIsCalculating(false)
       setStep('result')
     }, 1500)
   }
-  
+
   const handleActivateListing = () => {
     setIsListingActive(true)
     setStep('active')
@@ -76,7 +133,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
             잉여 에너지를 판매하고 수익을 얻으세요
           </DrawerDescription>
         </DrawerHeader>
-        
+
         <div className="px-4 pb-8">
           <AnimatePresence mode="wait">
             {/* Step 1: Input Area */}
@@ -95,7 +152,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                   </div>
                   <span className="font-medium text-foreground">설치 면적 입력</span>
                 </div>
-                
+
                 {/* Area Input */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
@@ -113,7 +170,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                       m2
                     </span>
                   </div>
-                  
+
                   {/* Quick Select */}
                   <div className="flex gap-2">
                     {[10, 20, 50, 100].map((amount) => (
@@ -127,7 +184,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* Info Box */}
                 <div className="bg-secondary rounded-xl p-4 text-sm text-muted-foreground border border-border">
                   <p>
@@ -135,7 +192,82 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                     실제 수익은 날씨, 계절 등에 따라 달라질 수 있습니다.
                   </p>
                 </div>
-                
+
+                {/* Map Area */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground">
+                      발전소 위치 선택 <span className="text-xs font-normal text-muted-foreground">(지도 클릭)</span>
+                    </label>
+                    <span className="text-xs font-bold text-primary px-2 py-1 bg-primary/10 rounded-md">
+                      {REGION_NAMES[selectedRegion]}
+                    </span>
+                  </div>
+                  <div
+                    className="relative h-[250px] bg-secondary rounded-xl overflow-hidden border border-border group touch-none"
+                    style={{ touchAction: 'none' }}
+                  >
+                    <motion.div
+                      className="relative w-full h-full cursor-pointer"
+                      style={{ scale: mapScale, originX: 0.5, originY: 0.5 }}
+                      drag
+                      dragMomentum={false}
+                      dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
+                      onClick={handleImageClick}
+                    >
+                      <Image
+                        src="/jeju-map.png"
+                        alt="Jeju Map"
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+
+                      {/* Selected Marker */}
+                      {selectedCoords && (
+                        <div
+                          className="absolute w-6 h-6 -ml-3 -mt-6 animate-bounce"
+                          style={{ left: `${selectedCoords.x}%`, top: `${selectedCoords.y}%` }}
+                        >
+                          <MapPin className="w-6 h-6 text-primary drop-shadow-md fill-current" />
+                        </div>
+                      )}
+                    </motion.div>
+
+                    {/* Zoom Controls */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 bg-background/90 rounded-lg p-1.5 shadow-md border border-border z-10">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setMapScale(prev => Math.min(prev + 0.5, 3)) }}
+                        className="p-2 hover:bg-secondary rounded-md text-foreground transition-colors active:bg-secondary/80"
+                      >
+                        <ZoomIn className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setMapScale(prev => Math.max(prev - 0.5, 1)) }}
+                        className="p-2 hover:bg-secondary rounded-md text-foreground transition-colors active:bg-secondary/80"
+                      >
+                        <ZoomOut className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setMapScale(1) }}
+                        className="p-2 hover:bg-secondary rounded-md text-foreground transition-colors active:bg-secondary/80"
+                        title="Reset"
+                      >
+                        <RotateCcw className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {!selectedCoords && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                        <div className="bg-background/90 px-3 py-2 rounded-lg text-xs font-medium shadow-lg flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          지도를 터치하여 위치를 선택하세요
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Calculate Button */}
                 <button
                   onClick={handleCalculate}
@@ -156,7 +288,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                 </button>
               </motion.div>
             )}
-            
+
             {/* Step 2: Result */}
             {step === 'result' && (
               <motion.div
@@ -173,18 +305,13 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                   </div>
                   <span className="font-medium text-foreground">예상 수익 확인</span>
                 </div>
-                
+
                 {/* Results */}
                 <div className="space-y-3">
-                  <div className="bg-secondary rounded-xl p-4 border border-border">
-                    <p className="text-sm text-muted-foreground mb-1">예상 잉여 에너지 (월)</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {calculatedEnergy.toLocaleString()} <span className="text-base font-medium text-muted-foreground">kWh</span>
-                    </p>
-                  </div>
-                  
+
+
                   <div className="bg-primary rounded-xl p-4">
-                    <p className="text-sm text-primary-foreground/80 mb-1">예상 월 수익</p>
+                    <p className="text-sm text-primary-foreground/80 mb-1">현재 얻을 수 있는 수익</p>
                     <p className="text-2xl font-bold text-primary-foreground">
                       {calculatedProfit.toLocaleString()}원
                     </p>
@@ -193,7 +320,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Toggle */}
                 <div className="bg-secondary rounded-xl p-4 border border-border flex items-center justify-between">
                   <div>
@@ -205,7 +332,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                     onCheckedChange={setIsListingActive}
                   />
                 </div>
-                
+
                 {/* Activate Button */}
                 <button
                   onClick={handleActivateListing}
@@ -214,7 +341,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                 >
                   판매 시작하기
                 </button>
-                
+
                 <button
                   onClick={() => setStep('input')}
                   className="w-full h-11 text-muted-foreground hover:text-foreground font-medium transition-colors text-sm"
@@ -223,7 +350,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                 </button>
               </motion.div>
             )}
-            
+
             {/* Step 3: Active Listing */}
             {step === 'active' && (
               <motion.div
@@ -241,14 +368,14 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                 >
                   <CheckCircle2 className="w-8 h-8 text-primary" />
                 </motion.div>
-                
+
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-foreground">판매 리스팅 활성화됨!</h3>
                   <p className="text-muted-foreground text-sm mt-1">
                     트럭이 에너지를 수거하러 이동중입니다
                   </p>
                 </div>
-                
+
                 {/* Truck Info Card */}
                 <div className="bg-secondary rounded-xl p-4 border border-border space-y-4">
                   <div className="flex items-center gap-3">
@@ -260,7 +387,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                       <p className="text-primary font-medium text-sm">ETA: 8분</p>
                     </div>
                   </div>
-                  
+
                   {/* Progress */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
@@ -276,14 +403,14 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                       />
                     </div>
                   </div>
-                  
+
                   {/* Live Status */}
                   <div className="flex items-center gap-2 text-sm">
                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                     <span className="text-muted-foreground">실시간 위치 추적중</span>
                   </div>
                 </div>
-                
+
                 {/* Map Preview */}
                 <div className="relative h-[120px] bg-secondary rounded-xl overflow-hidden border border-border">
                   <div className="absolute inset-0 bg-[#161B22]">
@@ -303,31 +430,15 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                         />
                       ))}
                     </div>
-                    
+
                     <div className="absolute bottom-1/4 right-1/4">
                       <MapPin className="w-5 h-5 text-primary" />
                     </div>
-                    
-                    <motion.div 
-                      className="absolute"
-                      initial={{ top: '20%', left: '20%' }}
-                      animate={{ 
-                        top: ['20%', '40%', '60%'],
-                        left: ['20%', '50%', '65%'],
-                      }}
-                      transition={{ 
-                        duration: 4,
-                        repeat: Number.POSITIVE_INFINITY,
-                        repeatType: 'reverse'
-                      }}
-                    >
-                      <div className="bg-secondary p-1 rounded-md border border-border">
-                        <Truck className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                    </motion.div>
+
+
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => onOpenChange(false)}
                   className="w-full h-14 bg-secondary hover:bg-secondary/80 text-foreground font-bold text-base rounded-xl transition-all active:scale-[0.98] border border-border"

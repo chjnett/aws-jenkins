@@ -20,6 +20,7 @@ export interface KakaoMapProps {
         content?: string;
     }>;
     onMarkerClick?: (marker: any) => void;
+    onClick?: (lat: number, lng: number) => void;
 }
 
 export { };

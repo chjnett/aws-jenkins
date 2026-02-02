@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Menu, Bell, Zap, Battery, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { Menu, Bell, Zap, Battery, TrendingUp, ArrowUpRight, ArrowDownRight, Leaf, Truck } from 'lucide-react'
 import { PriceChart } from './price-chart'
 import { BuyDrawer } from './buy-drawer'
 import { SellDrawer } from './sell-drawer'
@@ -19,20 +19,20 @@ export function Dashboard({ onLogout }: DashboardProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
-      <motion.header 
+      <motion.header
         className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between px-4 h-14">
-          <button 
+          <button
             onClick={() => setShowMenu(!showMenu)}
             className="p-2 rounded-xl hover:bg-secondary transition-colors relative"
           >
             <Menu className="w-5 h-5 text-foreground" />
           </button>
-          
+
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
               <Zap className="w-4 h-4 text-primary-foreground" />
@@ -41,33 +41,33 @@ export function Dashboard({ onLogout }: DashboardProps) {
               ENERGY TRUCK
             </span>
           </div>
-          
+
           <button className="p-2 rounded-xl hover:bg-secondary transition-colors relative">
             <Bell className="w-5 h-5 text-foreground" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
           </button>
         </div>
-        
+
         {/* Dropdown Menu */}
         {showMenu && (
-          <motion.div 
+          <motion.div
             className="absolute top-14 left-4 bg-card rounded-xl shadow-2xl border border-border p-2 min-w-[160px] z-50"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <button 
+            <button
               onClick={() => setShowMenu(false)}
               className="w-full text-left px-4 py-3 rounded-lg hover:bg-secondary transition-colors text-sm font-medium text-foreground"
             >
               내 거래 내역
             </button>
-            <button 
+            <button
               onClick={() => setShowMenu(false)}
               className="w-full text-left px-4 py-3 rounded-lg hover:bg-secondary transition-colors text-sm font-medium text-foreground"
             >
               설정
             </button>
-            <button 
+            <button
               onClick={() => {
                 setShowMenu(false)
                 onLogout()
@@ -91,26 +91,24 @@ export function Dashboard({ onLogout }: DashboardProps) {
         >
           <div className="bg-card rounded-2xl p-4 border border-border">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
-              <Battery className="w-4 h-4 text-primary" />
-              <span>보유 에너지</span>
+              <Leaf className="w-4 h-4 text-green-500" />
+              <span>환경 기여도</span>
             </div>
-            <p className="text-xl font-bold text-foreground">42.5 <span className="text-sm font-medium text-muted-foreground">kWh</span></p>
-            <p className="text-xs text-muted-foreground mt-1">약 10,625원</p>
+            <p className="text-xl font-bold text-foreground">125 <span className="text-sm font-medium text-muted-foreground">kgCO2</span></p>
+            <p className="text-xs text-muted-foreground mt-1">소나무 약 18그루 식재 효과</p>
           </div>
           <div className="bg-card rounded-2xl p-4 border border-border">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span>이번달 수익</span>
+              <Truck className="w-4 h-4 text-blue-500" />
+              <span>주변 트럭의 개수</span>
             </div>
-            <p className="text-xl font-bold text-primary">+18,420<span className="text-sm font-medium">원</span></p>
+            <p className="text-xl font-bold text-primary">5 <span className="text-sm font-medium">대</span></p>
             <div className="flex items-center gap-1 mt-1">
-              <ArrowUpRight className="w-3 h-3 text-primary" />
-              <span className="text-xs text-primary">12%</span>
-              <span className="text-xs text-muted-foreground">지난달 대비</span>
+              <span className="text-xs text-muted-foreground">평균 1.2km 거리</span>
             </div>
           </div>
         </motion.div>
-        
+
         {/* Current Price Card */}
         <motion.div
           className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-5"
@@ -135,10 +133,10 @@ export function Dashboard({ onLogout }: DashboardProps) {
             <span className="text-xs text-primary-foreground/70">오늘 오전 대비</span>
           </div>
         </motion.div>
-        
+
         {/* Price Chart */}
         <PriceChart />
-        
+
         {/* Recent Activity */}
         <motion.div
           className="bg-card rounded-2xl p-5 border border-border"
@@ -155,9 +153,8 @@ export function Dashboard({ onLogout }: DashboardProps) {
             ].map((tx, i) => (
               <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    tx.type === 'sell' ? 'bg-primary/10' : 'bg-secondary'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type === 'sell' ? 'bg-primary/10' : 'bg-secondary'
+                    }`}>
                     {tx.type === 'sell' ? (
                       <ArrowUpRight className="w-5 h-5 text-primary" />
                     ) : (
@@ -184,7 +181,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       </main>
 
       {/* Action Footer */}
-      <motion.div 
+      <motion.div
         className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border z-50"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}

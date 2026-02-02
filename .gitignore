@@ -1,0 +1,48 @@
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Environment Variables (중요: 보안 키 절대 올리지 않기)
+.env
+*.env
+jenkins/.env
+backend/.env
+energy-trading-app/.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Terraform (중요: 상태 파일 올리지 않기)
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+.terraform.lock.hcl
+*.tfplan
+tfplan
+
+
+# Jenkins
+jenkins_home/
+
+# Terraform Keys (혹시 다운받은 csv 파일이 있다면)
+*_accessKeys.csv

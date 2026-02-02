@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  terraform:
+    image: hashicorp/terraform:latest
+    working_dir: /workspace
+    volumes:
+      - ./terraform:/workspace
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build:
+      context: ./energy-trading-app
+      dockerfile: Dockerfile
+      target: dev
+    container_name: energy-truck-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./energy-trading-app:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: energy-truck-backend
+    ports:
+      - "8001:8000" # 로컬 8001번 포트 → 컨테이너 내부 8000번 (AWS 배포는 8000번 그대로)
+    volumes:
+      - ./backend:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    ports:
+      - "9090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - ./jenkins/.env
+
+volumes:
+  jenkins_home:

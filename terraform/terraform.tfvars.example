@@ -1,0 +1,13 @@
+# Terraform Variables Configuration Example
+# Copy this file to terraform.tfvars and update with your values
+
+# AWS Region (Default: Seoul)
+aws_region = "ap-northeast-2"
+
+# Project Name (used for resource naming)
+project_name = "energy-truck"
+
+# VPC CIDR Block
+vpc_cidr = "10.0.0.0/16"
+
+# Note: AWS credentials should be set in backend/.env, not here

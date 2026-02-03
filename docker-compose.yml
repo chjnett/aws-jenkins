@@ -38,7 +38,10 @@ services:
       - PYTHONUNBUFFERED=1
 
   jenkins:
-    image: jenkins/jenkins:lts
+    build: 
+      context: ./jenkins
+      dockerfile: Dockerfile
+    # image: jenkins/jenkins:lts
     container_name: jenkins
     user: root
     ports:

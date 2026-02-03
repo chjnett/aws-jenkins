@@ -85,6 +85,25 @@ AWS에 접근하기 위한 키를 등록합니다.
      - *잠깐!* `Jenkinsfile`을 보면 `AWS_ACCOUNT_ID` 변수는 있지만 Access Key는 환경 변수나 `~/.aws/credentials`를 사용하는 방식입니다.
      - Docker 방식에서는 환경 변수 주입이 더 편합니다. (방법 A 추천)
 
+### 🐙 GitHub Private Repository 접근 설정 (Private 저장소 사용 시 필수)
+
+Public 저장소가 아닌 **Private 저장소**를 사용하는 경우, Jenkins가 코드를 가져오려면 인증이 필요합니다.
+
+1.  **GitHub 토큰 생성**:
+    - GitHub [Settings](https://github.com/settings/tokens/new) > **Developer settings** > **Personal access tokens (Tokens (classic))**
+    - **Generate new token (classic)** 클릭
+    - Scopes: `repo` (전체), `admin:repo_hook` 체크
+    - **생성된 토큰 복사**
+
+2.  **Jenkins에 Credentials 등록**:
+    - **Manage Jenkins** > **Credentials** > **System** > **Global credentials**
+    - **+ Add Credentials** 클릭
+    - **Kind**: `Username with password`
+    - **Username**: 본인 GitHub 아이디
+    - **Password**: 복사한 **GitHub 토큰**
+    - **ID**: `github-token`
+    - **Create** 클릭
+
 ---
 
 ## 🛤️ 5. 파이프라인 생성
@@ -96,6 +115,7 @@ AWS에 접근하기 위한 키를 등록합니다.
    - Definition: **Pipeline script from SCM**
    - SCM: **Git**
    - Repository URL: `https://github.com/chjnett/aws-jenkins.git`
+   - Credentials: **github-token** (Private 저장소인 경우 선택, Public이면 `None`)
    - Branch Specifier: `*/main`
    - Script Path: `Jenkinsfile`
 5. **Save**

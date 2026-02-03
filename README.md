@@ -15,106 +15,35 @@
 
 ## 🎯 프로젝트 개요
 
-**Energy Truck**은 제주도의 신재생 에너지 출력 제한 문제를 해결하기 위한 P2P 에너지 거래 플랫폼입니다.
+**Energy Truck**은 제주도의 신재생 에너지 출력 제한 문제를 해결하기 위한 **AWS 클라우드 네이티브** P2P 에너지 거래 플랫폼입니다.
 
-### 핵심 컨셉
-- **서비스명**: Energy Truck (에너지 트럭)
-- **목표**: 신재생 에너지 Curtailment 해결
-- **UX 철학**: 토스(Toss) 스타일의 극단적인 간결함, 여백의 미, 부드러운 애니메이션
-
-### 주요 기능
-- ⚡ **실시간 에너지 거래**: P2P 방식의 에너지 매매
-- 📊 **태양광 출력 모델링**: AI 기반 발전량 예측
-- 💰 **SMP 가격 연동**: 실시간 전력 시장 가격 반영
-- 🔐 **안전한 인증**: Supabase Auth 기반 사용자 관리
+### ☁️ 핵심 인프라 특징
+- **AWS 중심 설계**: ECS Fargate, ECR, ALB, S3 등 AWS 관리형 서비스를 적극 활용하여 운영 부담(NoOps)을 최소화했습니다.
+- **서버리스 컨테이너**: AWS Fargate를 사용하여 서버 관리 없이 컨테이너를 실행하고 비용 효율성을 극대화합니다.
+- **자동화된 DevOps**: Jenkins와 AWS ECR/ECS를 연동하여 코드 푸시부터 배포까지 완전 자동화된 파이프라인을 구축했습니다.
 
 ---
 
-## 🏗️ 시스템 아키텍처
+### 🏗️ Cloud Architecture (AWS Native)
 
 ```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[Next.js 14 App Router]
-        B[Tailwind CSS + shadcn/ui]
-        C[React Three Fiber - 3D Assets]
-    end
+graph LR
+    %% One-line Flow: DevOps -> Infra -> User
+    Git[GitHub] --> Jenkins --> ECR[AWS ECR] --> ECS[AWS ECS Fargate]
+    User((User)) --> ALB[AWS ALB] --> ECS
     
-    subgraph "Backend Layer"
-        D[FastAPI - Python 3.11+]
-        E[태양광 모델링 로직]
-        F[비동기 처리 async/await]
-    end
-    
-    subgraph "Data Layer"
-        G[Supabase PostgreSQL]
-        H[Supabase Auth]
-        I[Supabase Realtime]
-        J[Redis Cache]
-    end
-    
-    subgraph "Infrastructure Layer"
-        K[Docker + Docker Compose]
-        L[AWS ECS Fargate]
-        M[AWS ECR]
-        N[AWS ALB]
-        O[AWS S3]
-    end
-    
-    subgraph "CI/CD Pipeline"
-        P[GitHub Webhooks]
-        Q[Jenkins]
-        R[Auto Scaling]
-    end
-    
-    A --> D
-    B --> A
-    C --> A
-    D --> E
-    D --> F
-    D --> G
-    D --> H
-    D --> I
-    D --> J
-    K --> L
-    L --> M
-    N --> L
-    O --> A
-    P --> Q
-    Q --> M
-    Q --> L
-    R --> L
+    %% Storage attached to Compute
+    ECS -.-> S3[AWS S3]
+
+    classDef aws fill:#FF9900,stroke:#232F3E,color:white,font-weight:bold;
+    class ECR,ECS,ALB,S3 aws;
 ```
 
-### 아키텍처 설명
-
-#### 1️⃣ **Frontend Layer**
-- **Next.js 14**: App Router를 활용한 서버 사이드 렌더링
-- **Tailwind CSS + shadcn/ui**: 토스 스타일의 미니멀한 UI 구현
-- **React Three Fiber**: 3D 에너지 트럭 비주얼 에셋
-
-#### 2️⃣ **Backend Layer**
-- **FastAPI**: 고성능 비동기 Python 웹 프레임워크
-- **태양광 모델링**: 발전량 예측 및 출력 제한 계산 로직
-- **비동기 처리**: `async/await`로 병목 현상 방지
-
-#### 3️⃣ **Data Layer**
-- **Supabase PostgreSQL**: 메인 데이터베이스
-- **Supabase Auth**: 사용자 인증 및 세션 관리
-- **Supabase Realtime**: 실시간 거래 업데이트
-- **Redis**: SMP 가격 및 모델링 결과 캐싱
-
-#### 4️⃣ **Infrastructure Layer**
-- **Docker**: 컨테이너화된 애플리케이션
-- **AWS ECS Fargate**: 서버리스 컨테이너 실행
-- **AWS ECR**: Docker 이미지 레지스트리
-- **AWS ALB**: 로드 밸런싱 및 트래픽 분산
-- **AWS S3**: 정적 파일 및 3D 에셋 저장
-
-#### 5️⃣ **CI/CD Pipeline**
-- **GitHub Webhooks**: 코드 Push 시 자동 트리거
-- **Jenkins**: 빌드, 테스트, 배포 자동화
-- **Auto Scaling**: CPU/메모리 기반 자동 확장
+**시스템 구성 요소:**
+- **☁️ Compute**: **AWS ECS Fargate** (Serverless Container) - 인프라 관리 없는 완전 관리형 컨테이너 실행 환경
+- **🚀 Network**: **AWS ALB** (Load Balancer) - 트래픽 부하 분산 / **AWS S3** - 정적 에셋 호스팅
+- **🔄 DevOps**: **Jenkins** + **AWS ECR** - 이미지 빌드부터 배포까지 원클릭 자동화 (CI/CD)
+- **💾 Data**: **Supabase** (PostgreSQL + Auth) - 관리형 백엔드 서비스 활용
 
 ---
 

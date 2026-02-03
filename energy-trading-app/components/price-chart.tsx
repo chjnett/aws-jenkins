@@ -76,7 +76,7 @@ export function PriceChart() {
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">가격 추이 (서울시)</p>
+        <p className="text-sm text-muted-foreground">가격 추이 (제주시)</p>
 
         {/* Time Filters */}
         <div className="flex gap-1 bg-secondary rounded-lg p-1">

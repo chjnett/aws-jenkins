@@ -149,7 +149,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="px-4 pb-8">
+        <div className="px-4 pb-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
           <AnimatePresence mode="wait">
             {/* Step 1: Input Area */}
             {step === 'input' && (

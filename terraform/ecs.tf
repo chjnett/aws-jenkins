@@ -28,7 +28,15 @@ resource "aws_ecs_task_definition" "frontend" {
           containerPort = 3000
           hostPort      = 3000
         }
-      ]
+      ],
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/${var.project_name}"
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "frontend"
+        }
+      }
     }
   ])
 }
@@ -51,7 +59,15 @@ resource "aws_ecs_task_definition" "backend" {
           containerPort = 8000  # 백엔드 앱은 항상 8000포트에서 실행 (Dockerfile CMD 참고)
           hostPort      = 8000  # AWS에서는 8000번 그대로 노출, 로컬 개발(docker-compose)에서는 8001로 매핑
         }
-      ]
+      ],
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/${var.project_name}"
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "backend"
+        }
+      },
 
       # 환경변수 설정 (배포 후 수정 필수!)
       environment = [

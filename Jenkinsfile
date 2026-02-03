@@ -7,7 +7,7 @@ pipeline {
         // 방법 2) jenkins/.env 파일 사용 (docker-compose 권장)
         // 자세한 가이드: docs/jenkins-env-setup.md
         
-        AWS_ACCOUNT_ID = 'your-aws-account-id' // ⚠️ 실제 값 또는 credentials() 사용
+        // AWS_ACCOUNT_ID = 'your-aws-account-id' // Use value from jenkins/.env
         AWS_REGION = 'ap-northeast-2'
         ECR_REPO_FRONTEND = 'energy-truck-frontend'
         ECR_REPO_BACKEND = 'energy-truck-backend'

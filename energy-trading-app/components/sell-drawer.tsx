@@ -19,10 +19,10 @@ type Region = 'JEJU_NORTH' | 'JEJU_SOUTH' | 'JEJU_EAST' | 'JEJU_WEST'
 const CENTER = { lat: 33.3617, lng: 126.5292 } // 한라산
 
 const SOLAR_COEFFICIENT: Record<Region, number> = {
-  JEJU_EAST: 10.592272727272727, // 성산 (동부) - 사용자 지정 값
-  JEJU_WEST: 11.2450, // 고산 (서부)
-  JEJU_SOUTH: 11.5500, // 서귀포 (남부)
-  JEJU_NORTH: 10.1200, // 제주시 (북부)
+  JEJU_EAST: 10.592272727272727,
+  JEJU_WEST: 9.563636363636363,
+  JEJU_SOUTH: 11.143636363636363,
+  JEJU_NORTH: 11.481818181818182,
 }
 
 const REGION_NAMES: Record<Region, string> = {
@@ -44,6 +44,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
   const [area, setArea] = useState('')
   const [selectedRegion, setSelectedRegion] = useState<Region>('JEJU_EAST') // Default
   const [selectedCoords, setSelectedCoords] = useState<{ x: number, y: number } | null>(null)
+  const [currentCoefficient, setCurrentCoefficient] = useState<number>(SOLAR_COEFFICIENT.JEJU_EAST)
   const [mapScale, setMapScale] = useState(1)
   const [isCalculating, setIsCalculating] = useState(false)
   const [isListingActive, setIsListingActive] = useState(false)
@@ -60,6 +61,7 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
       setCalculatedProfit(0)
       setSelectedCoords(null)
       setSelectedRegion('JEJU_EAST')
+      setCurrentCoefficient(SOLAR_COEFFICIENT.JEJU_EAST)
     }
   }, [open])
 
@@ -85,15 +87,24 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
     const xDiff = xPercent - centerX
     const yDiff = yPercent - centerY
 
+    let newRegion: Region = 'JEJU_EAST'
+
     // Simple 4-quadrant logic
-    // If we want "East/West" dominance vs "North/South" dominance
     if (Math.abs(xDiff) > Math.abs(yDiff)) {
       // More Horizontal deviation -> East or West
-      setSelectedRegion(xDiff > 0 ? 'JEJU_EAST' : 'JEJU_WEST')
+      newRegion = xDiff > 0 ? 'JEJU_EAST' : 'JEJU_WEST'
     } else {
       // More Vertical deviation -> North or South
-      setSelectedRegion(yDiff > 0 ? 'JEJU_SOUTH' : 'JEJU_NORTH')
+      newRegion = yDiff > 0 ? 'JEJU_SOUTH' : 'JEJU_NORTH'
     }
+
+    setSelectedRegion(newRegion)
+
+    // Add random variation to the coefficient logic
+    // Random variation between -0.2 and +0.2
+    const baseVal = SOLAR_COEFFICIENT[newRegion]
+    const variation = (Math.random() * 0.4) - 0.2
+    setCurrentCoefficient(baseVal + variation)
   }
 
   const handleCalculate = () => {
@@ -102,7 +113,11 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
 
     setTimeout(() => {
       const areaNum = Number.parseFloat(area)
-      const dailyEnergy = (areaNum * 0.15 * 5)
+      // Use currentCoefficient instead of hardcoded 0.15 * 5
+      // The original formula was: area * 0.15 * 5 * 30 * 0.7 * 250
+      // We interpret the coefficient as replacing the daily generation factor per m2
+
+      const dailyEnergy = areaNum * currentCoefficient
       const monthlyEnergy = dailyEnergy * 30
       const surplusEnergy = monthlyEnergy * 0.7
       const profit = surplusEnergy * 250
@@ -315,29 +330,13 @@ export function SellDrawer({ open, onOpenChange }: SellDrawerProps) {
                     <p className="text-2xl font-bold text-primary-foreground">
                       {calculatedProfit.toLocaleString()}원
                     </p>
-                    <p className="text-xs text-primary-foreground/70 mt-2">
-                      연간 약 {(calculatedProfit * 12).toLocaleString()}원 예상
-                    </p>
                   </div>
-                </div>
-
-                {/* Toggle */}
-                <div className="bg-secondary rounded-xl p-4 border border-border flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground text-sm">판매 리스팅 활성화</p>
-                    <p className="text-xs text-muted-foreground">활성화하면 트럭이 에너지를 수거합니다</p>
-                  </div>
-                  <Switch
-                    checked={isListingActive}
-                    onCheckedChange={setIsListingActive}
-                  />
                 </div>
 
                 {/* Activate Button */}
                 <button
                   onClick={handleActivateListing}
-                  disabled={!isListingActive}
-                  className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
                   판매 시작하기
                 </button>

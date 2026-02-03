@@ -9,7 +9,6 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from '@/components/ui/drawer'
-import { KakaoMap } from '@/components/kakao-map'
 import { MapPin, Truck, Battery, CheckCircle2 } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 
@@ -26,7 +25,7 @@ export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
 
   const pricePerKwh = 250
   const calculatedEnergy = duration ? (Number.parseFloat(duration) / 60) * speed : 0
-  const calculatedPrice = calculatedEnergy * pricePerKwh
+  const calculatedPrice = Math.round(calculatedEnergy * pricePerKwh)
 
   useEffect(() => {
     if (!open) {
@@ -72,32 +71,7 @@ export function BuyDrawer({ open, onOpenChange }: BuyDrawerProps) {
                 exit={{ opacity: 0 }}
                 className="space-y-5"
               >
-                {/* Map Area */}
-                <div className="relative h-[200px] bg-secondary rounded-xl overflow-hidden border border-border">
-                  <KakaoMap
-                    center={{ lat: 33.4996, lng: 126.5312 }}
-                    level={9}
-                    markers={[
-                      {
-                        position: { lat: 33.5050, lng: 126.5350 },
-                        title: 'Truck #1024',
-                        content: '<strong>Truck #1024</strong><br/>이동중',
-                      },
-                      {
-                        position: { lat: 33.4950, lng: 126.5250 },
-                        title: '내 위치',
-                        content: '<strong>내 위치</strong>',
-                      }
-                    ]}
-                    className="h-full w-full"
-                  />
 
-                  {/* Overlay Info */}
-                  <div className="absolute bottom-3 left-3 bg-card/90 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2 border border-border shadow-lg z-10">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                    <span className="text-xs font-medium text-foreground">주변 트럭 3대 대기중</span>
-                  </div>
-                </div>
 
 
                 {/* Time Input */}
